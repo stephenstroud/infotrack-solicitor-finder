@@ -108,11 +108,18 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
                 <span>
                   <span class="font-medium text-slate-800">{{ firm.name }}</span>
                   <span class="block text-xs text-slate-500">
-                    {{ firm.locations.join(', ') }}
                     @if (firm.regionCount > 1) {
-                      <span class="ml-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                        {{ firm.regionCount }} regions
-                      </span>
+                      <details class="group inline-block">
+                        <summary class="flex cursor-pointer list-none items-center gap-1 text-indigo-600 hover:underline">
+                          <span class="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 group-open:bg-indigo-100 group-open:text-indigo-700">
+                            {{ firm.regionCount }} regions
+                          </span>
+                          <span class="text-[10px] transition-transform group-open:rotate-90">▸</span>
+                        </summary>
+                        <span class="mt-1 block">{{ firm.locations.join(', ') }}</span>
+                      </details>
+                    } @else {
+                      {{ firm.locations[0] }}
                     }
                   </span>
                 </span>
