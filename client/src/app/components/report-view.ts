@@ -108,7 +108,7 @@ import { RankedFirm, RankedFirmRegion, SearchReport, SolicitorView } from '../mo
         </p>
         <ol class="space-y-2">
           @for (firm of report().topRated; track firm.name; let i = $index) {
-            <li class="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-2">
+            <li class="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-4 py-2">
               <span class="flex items-start gap-3">
                 <span class="mt-0.5 w-5 text-right font-semibold text-slate-400">{{ i + 1 }}</span>
                 <span>
@@ -151,7 +151,7 @@ import { RankedFirm, RankedFirmRegion, SearchReport, SolicitorView } from '../mo
                   </span>
                 </span>
               </span>
-              <span class="shrink-0 text-sm font-medium text-amber-600">
+              <span class="mt-0.5 shrink-0 text-sm font-medium text-amber-600">
                 {{ rankStars(firm) }}
               </span>
             </li>
