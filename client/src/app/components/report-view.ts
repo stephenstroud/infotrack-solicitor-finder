@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
+import { RankedFirm, RankedFirmRegion, SearchReport, SolicitorView } from '../models/report';
 
 /** Renders a SearchReport: headline stats, contactability, breakdown, top-rated and the directory. */
 @Component({
@@ -31,7 +31,7 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
       </div>
     </div>
 
-    <!-- New-firm alert -->
+    <!-- New-firm alert (always shown so the comparison state is never ambiguous) -->
     @if (report().hasNewFirms) {
       <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
         <p class="font-semibold text-amber-900">
@@ -44,6 +44,11 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
             </span>
           }
         </div>
+      </div>
+    } @else {
+      <div class="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+        No new firms since the previous search — add a location you haven't searched yet and run
+        again to see new-firm alerts here.
       </div>
     }
 
@@ -117,21 +122,31 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
                           </span>
                           <span class="text-[10px] transition-transform group-open:rotate-90">▸</span>
                         </summary>
-                        <span class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
-                          @for (region of firm.locations; track region) {
-                            <button
-                              type="button"
-                              (click)="goToFirm(firm.name, region)"
-                              title="Jump to this office in the directory"
-                              class="text-indigo-600 hover:underline"
-                            >
-                              {{ region }}
-                            </button>
+                        <ul class="mt-1 space-y-0.5">
+                          @for (region of firm.regions; track region.location) {
+                            <li class="flex items-center gap-2">
+                              <button
+                                type="button"
+                                (click)="goToFirm(firm.name, region.location)"
+                                title="Jump to this office in the directory"
+                                class="text-indigo-600 hover:underline"
+                              >
+                                {{ region.location }}
+                              </button>
+                              <span class="text-[11px] text-amber-600">{{ regionStars(region) }}</span>
+                            </li>
                           }
-                        </span>
+                        </ul>
                       </details>
                     } @else {
-                      {{ firm.locations[0] }}
+                      <button
+                        type="button"
+                        (click)="goToFirm(firm.name, firm.regions[0].location)"
+                        title="Jump to this office in the directory"
+                        class="text-indigo-600 hover:underline"
+                      >
+                        {{ firm.regions[0].location }}
+                      </button>
                     }
                   </span>
                 </span>
@@ -233,6 +248,12 @@ export class ReportView {
 
   rankStars(firm: RankedFirm): string {
     return `${firm.stars.toFixed(1)} ★ (${firm.reviewCount.toLocaleString()})`;
+  }
+
+  regionStars(region: RankedFirmRegion): string {
+    return region.stars === null
+      ? 'no rating'
+      : `${region.stars.toFixed(1)} ★ (${(region.reviewCount ?? 0).toLocaleString()})`;
   }
 
   private readonly document = inject(DOCUMENT);

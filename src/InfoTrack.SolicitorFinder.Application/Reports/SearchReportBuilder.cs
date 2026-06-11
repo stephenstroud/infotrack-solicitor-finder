@@ -35,15 +35,28 @@ public static class SearchReportBuilder
             Reachable: firms.Count(f => f.Contact.IsReachable));
 
         // National ranking by quality *and* volume of reviews (see Rating.Score). The same firm
-        // can be listed in several searched locations, so group by firm name and rank once,
-        // carrying the regions it appears in.
+        // can be listed in several searched locations, so group by firm name and rank once. A
+        // firm qualifies if it is rated in at least one location; the regions list keeps every
+        // office (rated or not) with its own rating, ordered best-first.
         var topRated = firms
-            .Where(f => f.Rating is not null)
             .GroupBy(f => Solicitor.CanonicalName(f.Name))
-            .Select(group => new
+            .Where(group => group.Any(f => f.Rating is not null))
+            .Select(group =>
             {
-                Representative = group.OrderByDescending(f => f.Rating!.ReviewCount).First(),
-                Regions = group.Select(f => f.Location.Name).Distinct().OrderBy(name => name).ToList()
+                var representative = group
+                    .Where(f => f.Rating is not null)
+                    .OrderByDescending(f => f.Rating!.ReviewCount)
+                    .First();
+
+                var regions = group
+                    .GroupBy(f => f.Location)
+                    .Select(office => office.First())
+                    .Select(f => new RankedFirmRegion(f.Location.Name, f.Rating?.Stars, f.Rating?.ReviewCount))
+                    .OrderByDescending(r => r.Stars ?? -1)
+                    .ThenBy(r => r.Location)
+                    .ToList();
+
+                return new { Representative = representative, Regions = regions };
             })
             .OrderByDescending(x => x.Representative.Rating!.Score)
             .ThenByDescending(x => x.Representative.Rating!.ReviewCount)
