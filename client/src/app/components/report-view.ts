@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
 
 /** Renders a SearchReport: headline stats, contactability, breakdown, top-rated and the directory. */
@@ -116,7 +117,18 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
                           </span>
                           <span class="text-[10px] transition-transform group-open:rotate-90">▸</span>
                         </summary>
-                        <span class="mt-1 block">{{ firm.locations.join(', ') }}</span>
+                        <span class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                          @for (region of firm.locations; track region) {
+                            <button
+                              type="button"
+                              (click)="goToFirm(firm.name, region)"
+                              title="Jump to this office in the directory"
+                              class="text-indigo-600 hover:underline"
+                            >
+                              {{ region }}
+                            </button>
+                          }
+                        </span>
                       </details>
                     } @else {
                       {{ firm.locations[0] }}
@@ -152,7 +164,11 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
           </thead>
           <tbody class="divide-y divide-slate-100">
             @for (firm of report().firms; track firm.name + firm.location + firm.address) {
-              <tr class="align-top hover:bg-slate-50">
+              <tr
+                [id]="rowId(firm.name, firm.location)"
+                class="scroll-mt-6 align-top transition-colors hover:bg-slate-50"
+                [class.bg-amber-100]="highlightedRow() === rowId(firm.name, firm.location)"
+              >
                 <td class="px-5 py-2 font-medium text-slate-800">{{ firm.name }}</td>
                 <td class="px-3 py-2 text-slate-600">{{ firm.location }}</td>
                 <td class="px-3 py-2 text-slate-600">{{ firm.address }}</td>
@@ -201,5 +217,31 @@ export class ReportView {
 
   rankStars(firm: RankedFirm): string {
     return `${firm.stars.toFixed(1)} ★ (${firm.reviewCount.toLocaleString()})`;
+  }
+
+  private readonly document = inject(DOCUMENT);
+
+  /** The directory row currently highlighted after a region jump (cleared after a moment). */
+  readonly highlightedRow = signal<string | null>(null);
+
+  rowId(name: string, location: string): string {
+    return `firm-${this.slug(name)}-${this.slug(location)}`;
+  }
+
+  /** Scrolls the directory to this firm's office in the given region and briefly highlights it. */
+  goToFirm(name: string, location: string): void {
+    const id = this.rowId(name, location);
+    this.highlightedRow.set(id);
+    setTimeout(() =>
+      this.document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+    );
+    setTimeout(() => this.highlightedRow.set(null), 2500);
+  }
+
+  private slug(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 }
