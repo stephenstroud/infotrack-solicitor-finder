@@ -14,12 +14,16 @@ public sealed class Solicitor
     public ContactDetails Contact { get; }
     public string? Description { get; }
 
+    /// <summary>The firm's review standing, when the listing carries one; otherwise null.</summary>
+    public Rating? Rating { get; }
+
     public Solicitor(
         string name,
         Location location,
         Address? address = null,
         ContactDetails? contact = null,
-        string? description = null)
+        string? description = null,
+        Rating? rating = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Solicitor name is required.", nameof(name));
@@ -29,6 +33,7 @@ public sealed class Solicitor
         Address = address ?? Address.Empty;
         Contact = contact ?? ContactDetails.Empty;
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        Rating = rating;
     }
 
     /// <summary>

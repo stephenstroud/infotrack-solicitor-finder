@@ -17,7 +17,9 @@ public sealed record SolicitorView(
     string? Website,
     string? Description,
     int ChannelCount,
-    bool IsReachable)
+    bool IsReachable,
+    double? Stars,
+    int? ReviewCount)
 {
     public static SolicitorView From(Solicitor s) => new(
         s.Name,
@@ -30,5 +32,7 @@ public sealed record SolicitorView(
         s.Contact.Website,
         s.Description,
         s.Contact.ChannelCount,
-        s.Contact.IsReachable);
+        s.Contact.IsReachable,
+        s.Rating?.Stars,
+        s.Rating?.ReviewCount);
 }

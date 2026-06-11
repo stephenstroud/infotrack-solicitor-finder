@@ -39,28 +39,44 @@ public sealed partial record Address
     }
 
     /// <summary>
-    /// Best-effort parse of a comma-delimited address line into city + postcode.
-    /// Degrades gracefully: an unrecognised line still yields a valid Address holding
-    /// the raw text, so a parsing miss never loses data or throws.
+    /// Best-effort parse of an address line into city + postcode. The postcode is found by
+    /// scanning the whole line (the site is inconsistent about commas, e.g.
+    /// "…High Street, Harlesden, London NW10 4NE"); the city is taken from the trailing
+    /// comma-segment with the postcode removed. Degrades gracefully: an unrecognised line
+    /// still yields a valid Address holding the raw text, so a miss never loses data or throws.
     /// </summary>
     public static Address FromRaw(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return Empty;
 
-        var parts = raw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0) return new Address(raw);
+        var trimmed = raw.Trim();
+        var parts = trimmed.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-        var last = parts[^1];
-        if (PostcodeRegex().IsMatch(last))
+        var match = PostcodeRegex().Match(trimmed);
+        string? postcode = match.Success ? match.Value : null;
+
+        string? city = null;
+        if (parts.Length > 0)
         {
-            var city = parts.Length >= 2 ? parts[^2] : null;
-            return new Address(raw, city, last);
+            var tail = parts[^1];
+            if (postcode is not null && tail.Contains(postcode, StringComparison.OrdinalIgnoreCase))
+            {
+                var withoutPostcode = tail.Replace(postcode, string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+                city = withoutPostcode.Length > 0 ? withoutPostcode
+                     : parts.Length >= 2 ? parts[^2]
+                     : null;
+            }
+            else
+            {
+                city = tail;
+            }
         }
 
-        return new Address(raw, last);
+        return new Address(trimmed, city, postcode);
     }
 
-    // UK postcode, tolerant of the optional internal space (e.g. "EC1N 2PZ", "SW1H0HW").
-    [GeneratedRegex(@"^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$", RegexOptions.Compiled)]
+    // UK postcode, found anywhere in the line, tolerant of the optional internal space
+    // (e.g. "EC1N 2PZ", "NW10 4NE", "SW1H0HW").
+    [GeneratedRegex(@"[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}", RegexOptions.Compiled)]
     private static partial Regex PostcodeRegex();
 }

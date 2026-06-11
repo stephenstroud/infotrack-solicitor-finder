@@ -33,6 +33,15 @@ public static class SearchReportBuilder
             WithWebsite: firms.Count(f => f.Contact.HasWebsite),
             Reachable: firms.Count(f => f.Contact.IsReachable));
 
+        // National ranking by quality *and* volume of reviews (see Rating.Score).
+        var topRated = firms
+            .Where(f => f.Rating is not null)
+            .OrderByDescending(f => f.Rating!.Score)
+            .ThenByDescending(f => f.Rating!.ReviewCount)
+            .Take(10)
+            .Select(SolicitorView.From)
+            .ToList();
+
         var newFirms = snapshot.NewComparedTo(previous)
             .Select(SolicitorView.From)
             .ToList();
@@ -50,6 +59,7 @@ public static class SearchReportBuilder
             LocationsSearched: snapshot.Locations.Count,
             Contactability: contactability,
             Breakdown: breakdown,
+            TopRated: topRated,
             NewFirms: newFirms,
             Firms: views);
     }
