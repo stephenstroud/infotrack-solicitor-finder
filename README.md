@@ -66,7 +66,43 @@ field with small, named helpers in `Html.cs` (`Between`, `HrefContaining`, `Coun
 using only the BCL (`System.Net.WebUtility`, regex). It's resilient to the site's messy,
 class-light markup and degrades gracefully when a field is missing.
 
+### Adding another listing site (the pluggable seam)
+
+Scraping other conveyancing sites is one of the brief's optional extras. It isn't implemented
+(only solicitors.com), but the design makes it an **isolated addition, not a rewrite**:
+
+- The orchestration (`SearchSolicitorsHandler`) depends only on the `ISolicitorSource` port and
+  aggregates whatever sources are registered — it has no idea which sites exist.
+- Fetching and parsing are separate concerns (`IHtmlSource` + `SolicitorListingParser`), and the
+  site-specific URL shape lives in `ScraperOptions` (configuration), not in code.
+
+So a second site = a new `ISolicitorSource` adapter (its own URL builder + parser for that site's
+markup), registered in DI. The domain model, the report/insights, and the UI are untouched.
+
 ---
+
+## Design principles
+
+The brief asks for OO programming, clean separation of concerns, and a repeatable/reusable build.
+Concretely, in this codebase:
+
+- **OOP / encapsulation** — behaviour lives with the data it concerns: value objects expose
+  intent, not just fields (`ContactDetails.IsReachable`/`ChannelCount`, `Rating.Score`,
+  `Address.FromRaw`/`PostcodeArea`). `Solicitor` is an **entity** (identity via `Key`), kept
+  deliberately distinct from the immutable **value objects** (`record`s) around it.
+- **Polymorphism over conditionals** — live-vs-offline behaviour is chosen by *composing*
+  `IHtmlSource` implementations (`HttpHtmlSource`, `FixtureHtmlSource`, and a `FallbackHtmlSource`
+  decorator), not by `if` branches sprinkled through the code.
+- **Separation of concerns (DDD-leaning)** — Domain (pure) → Application (use cases + ports) →
+  Infrastructure (adapters) → Api (thin). Dependencies point inward; the domain knows nothing of
+  HTTP, EF, or solicitors.com.
+- **KISS** — a hand-rolled parser of small named string helpers instead of a DOM library; EF
+  in-memory instead of a database to install; the native `<details>` element for the expandable
+  regions instead of bespoke toggle state; one deployable instead of two services.
+- **DRY** — one normaliser (`Solicitor.CanonicalName`) backs both firm identity *and* top-rated
+  grouping; report percentages are computed once in the read-models (`ContactabilityStats`,
+  `LocationBreakdown`); domain→DTO mapping lives in a single `SolicitorView.From`; the target URL
+  is defined once in `ScraperOptions`.
 
 ## Tech stack
 
