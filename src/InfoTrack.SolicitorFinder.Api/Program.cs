@@ -24,14 +24,17 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-else
-{
-    // Only force HTTPS outside development, so the SPA's CORS preflight isn't redirected in dev.
-    app.UseHttpsRedirection();
-}
+
+// Serve the bundled Angular SPA (present in wwwroot only when published). TLS is terminated
+// by the host (e.g. Azure) at the edge, so no in-app HTTPS redirect is needed.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseCors(SpaCorsPolicy);
 app.MapControllers();
+
+// SPA fallback: any non-API, non-file route returns the Angular shell.
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

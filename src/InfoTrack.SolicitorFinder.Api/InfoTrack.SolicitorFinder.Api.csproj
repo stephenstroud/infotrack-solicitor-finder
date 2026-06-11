@@ -15,4 +15,22 @@
     <ProjectReference Include="..\InfoTrack.SolicitorFinder.Infrastructure\InfoTrack.SolicitorFinder.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!--
+    On publish, build the Angular SPA and fold its output into wwwroot so the API serves the
+    whole app as a single deployable. Skip with /p:BuildSpa=false (e.g. CI, which tests the
+    SPA separately). Requires Node/npm on the machine running `dotnet publish`.
+  -->
+  <Target Name="PublishAngular" BeforeTargets="ComputeFilesToPublish" Condition="'$(BuildSpa)' != 'false'">
+    <Message Importance="high" Text="Building Angular client for publish..." />
+    <Exec Command="npm ci" WorkingDirectory="$(MSBuildProjectDirectory)\..\..\client" />
+    <Exec Command="npm run build" WorkingDirectory="$(MSBuildProjectDirectory)\..\..\client" />
+    <ItemGroup>
+      <_SpaPublishFiles Include="$(MSBuildProjectDirectory)\..\..\client\dist\client\browser\**\*" />
+      <ResolvedFileToPublish Include="@(_SpaPublishFiles)">
+        <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+
 </Project>

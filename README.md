@@ -158,6 +158,25 @@ cd client && npm test
 
 ---
 
+## Deployment (Azure, free tier)
+
+The app deploys as a **single artifact**: `dotnet publish` builds the Angular SPA into the API's
+`wwwroot`, so one App Service serves both — one URL, no CORS. The hosted demo runs in `fixture`
+scraper mode so it always shows data regardless of the host's outbound networking.
+
+```powershell
+az login
+./deploy/azure-deploy.ps1 -AppName <globally-unique-name>
+```
+
+The script creates a free **F1** Linux App Service and zip-deploys the published output. To run
+the single artifact locally exactly as the host does:
+
+```powershell
+dotnet publish src/InfoTrack.SolicitorFinder.Api -c Release -o publish
+cd publish; dotnet InfoTrack.SolicitorFinder.Api.dll   # serves SPA + API on one origin
+```
+
 ## Notes & assumptions
 
 - **Ratings**: the live site exposes star ratings + review counts, so the "rank by rating &

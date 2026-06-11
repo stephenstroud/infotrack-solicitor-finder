@@ -209,6 +209,9 @@ DocProject/Help/html
 # Click-Once directory
 publish/
 
+# Deployment package produced by deploy/azure-deploy.ps1
+/app.zip
+
 # Publish Web Output
 *.[Pp]ublish.xml
 *.azurePubxml
