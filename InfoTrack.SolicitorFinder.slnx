@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InfoTrack.SolicitorFinder.Api/InfoTrack.SolicitorFinder.Api.csproj" />
+    <Project Path="src/InfoTrack.SolicitorFinder.Application/InfoTrack.SolicitorFinder.Application.csproj" />
+    <Project Path="src/InfoTrack.SolicitorFinder.Domain/InfoTrack.SolicitorFinder.Domain.csproj" />
+    <Project Path="src/InfoTrack.SolicitorFinder.Infrastructure/InfoTrack.SolicitorFinder.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InfoTrack.SolicitorFinder.Tests/InfoTrack.SolicitorFinder.Tests.csproj" />
+  </Folder>
+</Solution>
