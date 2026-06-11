@@ -1,5 +1,5 @@
 import { Component, computed, input } from '@angular/core';
-import { SearchReport, SolicitorView } from '../models/report';
+import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
 
 /** Renders a SearchReport: headline stats, contactability, breakdown, top-rated and the directory. */
 @Component({
@@ -95,20 +95,30 @@ import { SearchReport, SolicitorView } from '../models/report';
     <!-- Top rated -->
     @if (report().topRated.length) {
       <div class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h3 class="text-sm font-semibold text-slate-700">Top-rated firms</h3>
-        <p class="mb-3 text-xs text-slate-500">Ranked by star rating weighted by review volume.</p>
+        <h3 class="text-sm font-semibold text-slate-700">Top-rated firms (national)</h3>
+        <p class="mb-3 text-xs text-slate-500">
+          Ranked by star rating weighted by review volume. Firms with offices across several
+          searched locations are grouped into one entry.
+        </p>
         <ol class="space-y-2">
-          @for (firm of report().topRated; track firm.name + firm.location; let i = $index) {
+          @for (firm of report().topRated; track firm.name; let i = $index) {
             <li class="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-4 py-2">
-              <span class="flex items-center gap-3">
-                <span class="w-5 text-right font-semibold text-slate-400">{{ i + 1 }}</span>
+              <span class="flex items-start gap-3">
+                <span class="mt-0.5 w-5 text-right font-semibold text-slate-400">{{ i + 1 }}</span>
                 <span>
                   <span class="font-medium text-slate-800">{{ firm.name }}</span>
-                  <span class="text-xs text-slate-500"> · {{ firm.location }}</span>
+                  <span class="block text-xs text-slate-500">
+                    {{ firm.locations.join(', ') }}
+                    @if (firm.regionCount > 1) {
+                      <span class="ml-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                        {{ firm.regionCount }} regions
+                      </span>
+                    }
+                  </span>
                 </span>
               </span>
               <span class="shrink-0 text-sm font-medium text-amber-600">
-                {{ stars(firm) }}
+                {{ rankStars(firm) }}
               </span>
             </li>
           }
@@ -180,5 +190,9 @@ export class ReportView {
     if (firm.stars === null) return '—';
     const reviews = firm.reviewCount?.toLocaleString() ?? '0';
     return `${firm.stars.toFixed(1)} ★ (${reviews})`;
+  }
+
+  rankStars(firm: RankedFirm): string {
+    return `${firm.stars.toFixed(1)} ★ (${firm.reviewCount.toLocaleString()})`;
   }
 }

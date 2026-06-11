@@ -16,6 +16,14 @@ export interface SolicitorView {
   reviewCount: number | null;
 }
 
+export interface RankedFirm {
+  name: string;
+  stars: number;
+  reviewCount: number;
+  locations: string[];
+  regionCount: number;
+}
+
 export interface LocationBreakdown {
   location: string;
   firmCount: number;
@@ -45,7 +53,7 @@ export interface SearchReport {
   locationsSearched: number;
   contactability: ContactabilityStats;
   breakdown: LocationBreakdown[];
-  topRated: SolicitorView[];
+  topRated: RankedFirm[];
   newFirms: SolicitorView[];
   firms: SolicitorView[];
   topLocation: string | null;

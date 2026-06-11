@@ -40,8 +40,12 @@ public sealed class Solicitor
     /// Stable identity for de-duplication and new-firm detection across scrape runs:
     /// a firm is "the same" when its name and location match, ignoring case and spacing.
     /// </summary>
-    public string Key => $"{Canonical(Name)}|{Location.Slug}";
+    public string Key => $"{CanonicalName(Name)}|{Location.Slug}";
 
-    private static string Canonical(string value) =>
-        string.Join(' ', value.ToLowerInvariant().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+    /// <summary>
+    /// Case- and spacing-insensitive form of a firm name. Used both for firm identity and for
+    /// grouping the same national firm across the locations it appears in.
+    /// </summary>
+    public static string CanonicalName(string name) =>
+        string.Join(' ', name.ToLowerInvariant().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 }

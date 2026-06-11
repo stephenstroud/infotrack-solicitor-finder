@@ -1,4 +1,5 @@
 using InfoTrack.SolicitorFinder.Domain.Search;
+using InfoTrack.SolicitorFinder.Domain.Solicitors;
 
 namespace InfoTrack.SolicitorFinder.Application.Reports;
 
@@ -33,13 +34,25 @@ public static class SearchReportBuilder
             WithWebsite: firms.Count(f => f.Contact.HasWebsite),
             Reachable: firms.Count(f => f.Contact.IsReachable));
 
-        // National ranking by quality *and* volume of reviews (see Rating.Score).
+        // National ranking by quality *and* volume of reviews (see Rating.Score). The same firm
+        // can be listed in several searched locations, so group by firm name and rank once,
+        // carrying the regions it appears in.
         var topRated = firms
             .Where(f => f.Rating is not null)
-            .OrderByDescending(f => f.Rating!.Score)
-            .ThenByDescending(f => f.Rating!.ReviewCount)
+            .GroupBy(f => Solicitor.CanonicalName(f.Name))
+            .Select(group => new
+            {
+                Representative = group.OrderByDescending(f => f.Rating!.ReviewCount).First(),
+                Regions = group.Select(f => f.Location.Name).Distinct().OrderBy(name => name).ToList()
+            })
+            .OrderByDescending(x => x.Representative.Rating!.Score)
+            .ThenByDescending(x => x.Representative.Rating!.ReviewCount)
             .Take(10)
-            .Select(SolicitorView.From)
+            .Select(x => new RankedFirm(
+                x.Representative.Name,
+                x.Representative.Rating!.Stars,
+                x.Representative.Rating.ReviewCount,
+                x.Regions))
             .ToList();
 
         var newFirms = snapshot.NewComparedTo(previous)

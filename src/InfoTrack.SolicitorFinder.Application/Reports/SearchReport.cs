@@ -12,7 +12,7 @@ public sealed record SearchReport(
     int LocationsSearched,
     ContactabilityStats Contactability,
     IReadOnlyList<LocationBreakdown> Breakdown,
-    IReadOnlyList<SolicitorView> TopRated,
+    IReadOnlyList<RankedFirm> TopRated,
     IReadOnlyList<SolicitorView> NewFirms,
     IReadOnlyList<SolicitorView> Firms)
 {
