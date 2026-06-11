@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/stephenstroud/infotrack-solicitor-finder/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/stephenstroud/infotrack-solicitor-finder/actions/workflows/ci.yml)
 
+**🔗 Live demo: https://infotrack-solicitor-finder-4193.azurewebsites.net** &nbsp;(free Azure App Service — first load may cold-start for ~15s)
+
 A small full-stack app that automates gathering conveyancing solicitors by location from
 [solicitors.com](https://www.solicitors.com), and turns the raw listings into a sales-ready
 insight report — built as a **.NET 10 Web API + Angular SPA** pair.
@@ -163,6 +165,8 @@ cd client && npm test
 The app deploys as a **single artifact**: `dotnet publish` builds the Angular SPA into the API's
 `wwwroot`, so one App Service serves both — one URL, no CORS. The hosted demo runs in `fixture`
 scraper mode so it always shows data regardless of the host's outbound networking.
+
+> Live: https://infotrack-solicitor-finder-4193.azurewebsites.net
 
 ```powershell
 az login
