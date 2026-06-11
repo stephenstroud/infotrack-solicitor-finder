@@ -1,5 +1,7 @@
 # Solicitor Lead Finder
 
+[![CI](https://github.com/stephenstroud/infotrack-solicitor-finder/actions/workflows/ci.yml/badge.svg)](https://github.com/stephenstroud/infotrack-solicitor-finder/actions/workflows/ci.yml)
+
 A small full-stack app that automates gathering conveyancing solicitors by location from
 [solicitors.com](https://www.solicitors.com), and turns the raw listings into a sales-ready
 insight report — built as a **.NET 10 Web API + Angular SPA** pair.

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore InfoTrack.SolicitorFinder.slnx
+
+      - name: Build
+        run: dotnet build InfoTrack.SolicitorFinder.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test InfoTrack.SolicitorFinder.slnx --no-build -c Release --verbosity normal
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Locate Chrome
+        run: echo "CHROME_BIN=$(which google-chrome-stable || which google-chrome)" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npx ng test --watch=false --browsers=ChromeHeadless
