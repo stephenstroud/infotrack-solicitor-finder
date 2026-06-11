@@ -159,11 +159,21 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
               <th class="px-3 py-2 font-medium">Address</th>
               <th class="px-3 py-2 font-medium">Phone</th>
               <th class="px-3 py-2 font-medium">Contact</th>
-              <th class="px-5 py-2 text-right font-medium">Rating</th>
+              <th class="px-5 py-2 text-right font-medium">
+                <button
+                  type="button"
+                  (click)="toggleRatingSort()"
+                  class="inline-flex items-center gap-1 uppercase hover:text-slate-700"
+                  title="Sort by rating"
+                >
+                  Rating
+                  <span class="text-[10px]">{{ ratingSortIcon() }}</span>
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            @for (firm of report().firms; track firm.name + firm.location + firm.address) {
+            @for (firm of sortedFirms(); track firm.name + firm.location + firm.address) {
               <tr
                 [id]="rowId(firm.name, firm.location)"
                 class="scroll-mt-6 align-top transition-colors hover:bg-slate-50"
@@ -172,7 +182,13 @@ import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
                 <td class="px-5 py-2 font-medium text-slate-800">{{ firm.name }}</td>
                 <td class="px-3 py-2 text-slate-600">{{ firm.location }}</td>
                 <td class="px-3 py-2 text-slate-600">{{ firm.address }}</td>
-                <td class="px-3 py-2 whitespace-nowrap text-slate-600">{{ firm.phone ?? '—' }}</td>
+                <td class="px-3 py-2 whitespace-nowrap text-slate-600">
+                  @if (firm.phone) {
+                    <a [href]="telHref(firm.phone)" class="text-indigo-600 hover:underline">{{ firm.phone }}</a>
+                  } @else {
+                    —
+                  }
+                </td>
                 <td class="px-3 py-2">
                   <span class="flex gap-2">
                     @if (firm.website) {
@@ -243,5 +259,37 @@ export class ReportView {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
+  }
+
+  /** Directory rating sort: off (source order) → descending → ascending → off. */
+  readonly ratingSort = signal<'none' | 'desc' | 'asc'>('none');
+
+  readonly sortedFirms = computed<SolicitorView[]>(() => {
+    const firms = this.report().firms;
+    const sort = this.ratingSort();
+    if (sort === 'none') return firms;
+
+    const factor = sort === 'desc' ? -1 : 1;
+    return [...firms].sort((a, b) => {
+      // Unrated firms always sink to the bottom, whichever direction is chosen.
+      if (a.stars === null && b.stars === null) return 0;
+      if (a.stars === null) return 1;
+      if (b.stars === null) return -1;
+      if (a.stars !== b.stars) return (a.stars - b.stars) * factor;
+      return ((a.reviewCount ?? 0) - (b.reviewCount ?? 0)) * factor; // tie-break on review volume
+    });
+  });
+
+  toggleRatingSort(): void {
+    this.ratingSort.update((s) => (s === 'none' ? 'desc' : s === 'desc' ? 'asc' : 'none'));
+  }
+
+  ratingSortIcon(): string {
+    return this.ratingSort() === 'desc' ? '▼' : this.ratingSort() === 'asc' ? '▲' : '↕';
+  }
+
+  /** Dialable tel: href — keeps digits and a leading +, drops spaces and punctuation. */
+  telHref(phone: string): string {
+    return 'tel:' + phone.replace(/[^\d+]/g, '');
   }
 }
