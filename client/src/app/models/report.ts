@@ -16,17 +16,11 @@ export interface SolicitorView {
   reviewCount: number | null;
 }
 
-export interface RankedFirmRegion {
-  location: string;
-  stars: number | null;
-  reviewCount: number | null;
-}
-
 export interface RankedFirm {
   name: string;
   stars: number;
   reviewCount: number;
-  regions: RankedFirmRegion[];
+  locations: string[];
   regionCount: number;
 }
 

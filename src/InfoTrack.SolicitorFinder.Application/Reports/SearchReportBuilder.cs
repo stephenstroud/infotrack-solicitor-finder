@@ -34,29 +34,19 @@ public static class SearchReportBuilder
             WithWebsite: firms.Count(f => f.Contact.HasWebsite),
             Reachable: firms.Count(f => f.Contact.IsReachable));
 
-        // National ranking by quality *and* volume of reviews (see Rating.Score). The same firm
-        // can be listed in several searched locations, so group by firm name and rank once. A
-        // firm qualifies if it is rated in at least one location; the regions list keeps every
-        // office (rated or not) with its own rating, ordered best-first.
+        // National ranking by quality *and* volume of reviews (see Rating.Score). The rating is
+        // firm-wide, so group by firm name and rank once: a firm qualifies if it is rated in at
+        // least one location, and we list every location it appears in as its regional coverage.
         var topRated = firms
             .GroupBy(f => Solicitor.CanonicalName(f.Name))
             .Where(group => group.Any(f => f.Rating is not null))
-            .Select(group =>
+            .Select(group => new
             {
-                var representative = group
+                Representative = group
                     .Where(f => f.Rating is not null)
                     .OrderByDescending(f => f.Rating!.ReviewCount)
-                    .First();
-
-                var regions = group
-                    .GroupBy(f => f.Location)
-                    .Select(office => office.First())
-                    .Select(f => new RankedFirmRegion(f.Location.Name, f.Rating?.Stars, f.Rating?.ReviewCount))
-                    .OrderByDescending(r => r.Stars ?? -1)
-                    .ThenBy(r => r.Location)
-                    .ToList();
-
-                return new { Representative = representative, Regions = regions };
+                    .First(),
+                Locations = group.Select(f => f.Location.Name).Distinct().OrderBy(name => name).ToList()
             })
             .OrderByDescending(x => x.Representative.Rating!.Score)
             .ThenByDescending(x => x.Representative.Rating!.ReviewCount)
@@ -65,7 +55,7 @@ public static class SearchReportBuilder
                 x.Representative.Name,
                 x.Representative.Rating!.Stars,
                 x.Representative.Rating.ReviewCount,
-                x.Regions))
+                x.Locations))
             .ToList();
 
         var newFirms = snapshot.NewComparedTo(previous)

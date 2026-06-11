@@ -1,6 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { RankedFirm, RankedFirmRegion, SearchReport, SolicitorView } from '../models/report';
+import { RankedFirm, SearchReport, SolicitorView } from '../models/report';
 
 /** Renders a SearchReport: headline stats, contactability, breakdown, top-rated and the directory. */
 @Component({
@@ -122,30 +122,27 @@ import { RankedFirm, RankedFirmRegion, SearchReport, SolicitorView } from '../mo
                           </span>
                           <span class="text-[10px] transition-transform group-open:rotate-90">▸</span>
                         </summary>
-                        <ul class="mt-1 space-y-0.5">
-                          @for (region of firm.regions; track region.location) {
-                            <li class="flex items-center gap-2">
-                              <button
-                                type="button"
-                                (click)="goToFirm(firm.name, region.location)"
-                                title="Jump to this office in the directory"
-                                class="text-indigo-600 hover:underline"
-                              >
-                                {{ region.location }}
-                              </button>
-                              <span class="text-[11px] text-amber-600">{{ regionStars(region) }}</span>
-                            </li>
+                        <span class="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                          @for (region of firm.locations; track region) {
+                            <button
+                              type="button"
+                              (click)="goToFirm(firm.name, region)"
+                              title="Jump to this office in the directory"
+                              class="text-indigo-600 hover:underline"
+                            >
+                              {{ region }}
+                            </button>
                           }
-                        </ul>
+                        </span>
                       </details>
                     } @else {
                       <button
                         type="button"
-                        (click)="goToFirm(firm.name, firm.regions[0].location)"
+                        (click)="goToFirm(firm.name, firm.locations[0])"
                         title="Jump to this office in the directory"
                         class="text-indigo-600 hover:underline"
                       >
-                        {{ firm.regions[0].location }}
+                        {{ firm.locations[0] }}
                       </button>
                     }
                   </span>
@@ -248,12 +245,6 @@ export class ReportView {
 
   rankStars(firm: RankedFirm): string {
     return `${firm.stars.toFixed(1)} ★ (${firm.reviewCount.toLocaleString()})`;
-  }
-
-  regionStars(region: RankedFirmRegion): string {
-    return region.stars === null
-      ? 'no rating'
-      : `${region.stars.toFixed(1)} ★ (${(region.reviewCount ?? 0).toLocaleString()})`;
   }
 
   private readonly document = inject(DOCUMENT);
